@@ -35,6 +35,7 @@
     const title = getParam("title") || "Event";
     const startRaw = getParam("start");
     const endRaw = getParam("end");
+    const urlParam = getParam("url");
     const uid = getParam("uid") || "0";
 
     const startYmd = parseDateToYmd(startRaw);
@@ -64,6 +65,7 @@
         "DTSTART;VALUE=DATE:" + startYmd + "\r\n" +
         "DTEND;VALUE=DATE:" + endYmd + "\r\n" +
         "SUMMARY:" + title + "\r\n" +
+        (urlParam ? "URL:" + escapeIcs(urlParam) + "\r\n" : "") +
         "END:VEVENT\r\n" +
         "END:VCALENDAR\r\n";
 
