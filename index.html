@@ -32,13 +32,26 @@
       return `${y}${m}${day}`;
     }
 
-    const title = getParam("title") || "Event";
+    const title    = getParam("title") || "Event";
     const startRaw = getParam("start");
-    const endRaw = getParam("end");
-    const urlParam = getParam("url");
+    const endRaw   = getParam("end");
+
+    // Base URL from the query string
+    const baseUrlParam = getParam("url");
+
+    // Fragment part from the outer URL (anything after #)
+    const hash = window.location.hash || "";
+
+    // Compose the full URL: if base already contains a '#', use it as-is;
+    // otherwise append the fragment from the outer URL
+    const urlParam = baseUrlParam
+        ? (baseUrlParam.includes("#") ? baseUrlParam : baseUrlParam + hash)
+        : null;
+
     const startYmd = parseDateToYmd(startRaw);
-    const endYmd = parseDateToYmd(endRaw);
-    const uid = getParam("uid") || "0";
+    const endYmd   = parseDateToYmd(endRaw);
+    const uid      = getParam("uid") || "0";
+
 
     function escapeIcs(s) {
       if (!s) return "";
