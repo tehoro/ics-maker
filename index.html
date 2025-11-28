@@ -5,42 +5,66 @@
   <title>ICS Maker</title>
 
   <!-- Modern clean font -->
-  <link href="https://fonts.googleapis.com/css2?&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
     body {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
                    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
-      font-size: 1.15rem;
-      line-height: 1.5;
       margin: 0;
-      padding: 2.5rem;
+      padding: 0;
+      background: #eef0f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 2.2rem 2.8rem;
+      max-width: 480px;
+      width: calc(100% - 2rem);
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
       text-align: center;
-      color: #202020;
-      background: #f7f7f7;
+      animation: fadein 0.4s ease-out;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     #status {
+      font-size: 1.25rem;
       font-weight: 500;
-      margin-bottom: 1rem;
+      color: #222;
+      margin-bottom: 0.8rem;
     }
 
     p {
-      margin-top: 1rem;
+      margin: 0.7rem 0;
+      color: #444;
+      font-size: 1.05rem;
     }
 
     a {
       color: #0066cc;
       text-decoration: none;
+      font-weight: 500;
     }
     a:hover {
       text-decoration: underline;
     }
-
   </style>
 </head>
+
 <body>
-  <p id="status">Preparing your calendar file… it should download automatically.</p>
+  <div class="card">
+    <p id="status">Preparing your calendar file… it should download automatically.</p>
+    <p id="fallback"></p>
+  </div>
 
   <script>
     function getParam(name) {
@@ -51,7 +75,6 @@
       if (!s) return null;
       s = s.trim();
 
-      // Support DD/MM/YYYY (Knack) or YYYY-MM-DD
       let d;
       if (s.includes("/")) {
         const [dd, mm, yyyy] = s.split("/");
@@ -68,24 +91,23 @@
       return `${y}${m}${day}`;
     }
 
-    const title    = getParam("title") || "Event";
+    const title = getParam("title") || "Event";
     const startRaw = getParam("start");
-    const endRaw   = getParam("end");
+    const endRaw = getParam("end");
 
     const baseUrlParam = getParam("url");
     const hash = window.location.hash || "";
 
     const urlParam = baseUrlParam
-        ? (baseUrlParam.includes("#") ? baseUrlParam : baseUrlParam + hash)
-        : null;
+      ? (baseUrlParam.includes("#") ? baseUrlParam : baseUrlParam + hash)
+      : null;
 
     const startYmd = parseDateToYmd(startRaw);
-    const endYmd   = parseDateToYmd(endRaw);
-    const uid      = getParam("uid") || "0";
+    const endYmd = parseDateToYmd(endRaw);
+    const uid = getParam("uid") || "0";
 
     function escapeIcs(s) {
-      if (!s) return "";
-      return s.replace(/[\r\n]/g, "").trim();
+      return s ? s.replace(/[\r\n]/g, "").trim() : "";
     }
 
     function goBackOrFallback() {
@@ -93,16 +115,19 @@
 
       if (window.history.length > 1) {
         status.textContent =
-          "Your calendar file has been created — returning to the previous page in 2 seconds…";
-        setTimeout(() => window.history.back(), 1500);
+          "Your calendar file has been created — returning to the previous page…";
+        setTimeout(() => window.history.back(), 1000);
       } else {
-        status.innerHTML =
-          "Your calendar file has downloaded. You may close this tab.";
+        status.textContent =
+          "Your calendar file has been generated.";
+        document.getElementById("fallback").innerHTML =
+          "You may now close this tab.";
       }
     }
 
     if (!startYmd || !endYmd) {
-      document.body.innerHTML = "<p>Missing or invalid start/end date.</p>";
+      document.querySelector(".card").innerHTML =
+        "<p>Missing or invalid start/end date.</p>";
     } else {
       const now = new Date();
       const dtstamp =
@@ -137,21 +162,21 @@
       const safeTitle = title.replace(/[^A-Za-z0-9-_]+/g, "-") || "event";
       a.download = safeTitle + "-" + uid + ".ics";
       document.body.appendChild(a);
-
       a.click();
 
-      const fallback = document.createElement("p");
-      fallback.innerHTML =
-        'If your download did not start, ' +
-        '<a href="' + url + '" download="' + a.download + '">click here</a>.';
-      document.body.appendChild(fallback);
+      document.getElementById("fallback").innerHTML =
+        'If your download did not start, <a href="' +
+        url +
+        '" download="' +
+        a.download +
+        '">click here</a>.';
 
-      const status = document.getElementById("status");
-      status.textContent =
-        "Your calendar file has been created — returning to the previous page in 2 seconds…";
+      document.getElementById("status").textContent =
+        "Your calendar file has been created — returning to the previous page…";
 
-      setTimeout(goBackOrFallback, 1500);
+      setTimeout(goBackOrFallback, 1200);
     }
   </script>
 </body>
 </html>
+
