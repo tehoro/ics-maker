@@ -5,7 +5,8 @@
   <title>ICS Maker</title>
 </head>
 <body>
-  <p>Preparing your calendar file…</p>
+  <p id="status">Preparing your calendar file…</p>
+
   <script>
     function getParam(name) {
       return new URLSearchParams(window.location.search).get(name);
@@ -15,7 +16,7 @@
       if (!s) return null;
       s = s.trim();
 
-      // Support DD/MM/YYYY (what Knack is showing you) or YYYY-MM-DD
+      // Support DD/MM/YYYY (Knack) or YYYY-MM-DD
       let d;
       if (s.includes("/")) {
         const [dd, mm, yyyy] = s.split("/");
@@ -36,14 +37,13 @@
     const startRaw = getParam("start");
     const endRaw   = getParam("end");
 
-    // Base URL from the query string
+    // Base URL from query string (optional)
     const baseUrlParam = getParam("url");
 
-    // Fragment part from the outer URL (anything after #)
+    // Outer URL hash
     const hash = window.location.hash || "";
 
-    // Compose the full URL: if base already contains a '#', use it as-is;
-    // otherwise append the fragment from the outer URL
+    // Compose full URL from base + hash
     const urlParam = baseUrlParam
         ? (baseUrlParam.includes("#") ? baseUrlParam : baseUrlParam + hash)
         : null;
@@ -52,10 +52,21 @@
     const endYmd   = parseDateToYmd(endRaw);
     const uid      = getParam("uid") || "0";
 
-
     function escapeIcs(s) {
       if (!s) return "";
       return s.replace(/[\r\n]/g, "").trim();
+    }
+
+    function goBackOrFallback() {
+      const status = document.getElementById("status");
+
+      if (window.history.length > 1) {
+        status.textContent = "Returning to the previous page…";
+        window.history.back();
+      } else {
+        status.innerHTML =
+          'Your ICS file has downloaded. You may close this tab.';
+      }
     }
 
     if (!startYmd || !endYmd) {
@@ -94,13 +105,19 @@
       const safeTitle = title.replace(/[^A-Za-z0-9-_]+/g, "-") || "event";
       a.download = safeTitle + "-" + uid + ".ics";
       document.body.appendChild(a);
+
+      // Start download
       a.click();
 
+      // Fallback download link
       const p = document.createElement("p");
       p.innerHTML =
         'If your download did not start, ' +
         '<a href="' + url + '" download="' + a.download + '">click here</a>.';
       document.body.appendChild(p);
+
+      // Auto-return after a moment
+      setTimeout(goBackOrFallback, 1500);
     }
   </script>
 </body>
